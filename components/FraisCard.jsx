@@ -1,12 +1,18 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 
-export default function FraisCard({ frais }) {
+export default function FraisCard({ frais, onEdit, onDelete }) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Note [{frais.id_frais}] Visiteur n°{frais.id_visiteur} - {frais.anneemois}</Text>
       <Text style={styles.meta}>Justificatifs : {frais.nbjustificatifs}</Text>
       <Text style={styles.montant}>Montant validé : {frais.montantvalide}</Text>
       <Text style={styles.meta}>Montant saisi : —</Text>
+      <Pressable onPress={() => onEdit(frais.id_frais)} style={styles.editButton}>
+        <Text>Modifier</Text>
+      </Pressable>
+      <Pressable onPress={() => onDelete(frais.id_frais)} style={styles.deleteButton}>
+        <Text>Supprimer</Text>
+      </Pressable>
     </View>
   );
 }
@@ -38,5 +44,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#0E8C7C",
     marginTop: 4,
+  },
+  editButton: {
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#DDDDDD",
+    alignItems: "center",
+  },
+  deleteButton: {
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#F5B7B1",
+    alignItems: "center",
   },
 });
