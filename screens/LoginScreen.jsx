@@ -13,9 +13,12 @@ export default function LoginScreen() {
   const { loginUser } = useAuth();
 
   // 3. Fonction appelée au clic sur le bouton
-  const handleSubmit = () => {
-    if (!loginUser(login, password)) {
-      Alert.alert("Identifiants incorrects"); // Échec : affiche une erreur
+  const handleSubmit = async () => {
+    try {
+      const data = await loginUser(login, password);
+      if (!data.token) throw new Error("Identifiants incorrects");
+    } catch (error) {
+      Alert.alert(error.message);
     }
   };
   // 4. Rend le formulaire

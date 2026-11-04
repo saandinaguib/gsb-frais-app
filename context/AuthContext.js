@@ -1,37 +1,49 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { signIn, signOut } from "../services/authService";
 // 1. Création du contexte
 const AuthContext = createContext();
 // 2. Fournisseur du contexte (AuthProvider)
 export function AuthProvider({ children }) {
-// État local pour stocker l’utilisateur (null = non connecté)
-
-
-// ToDo : affecter la valeur nulle
 const [user, setUser] = useState(null);
+const [token, setToken] = useState(null);
+const [sessionLoading, setSessionLoading] = useState(true);
 
-
+// Restauration de la session au démarrage
+useEffect(() => {
+  const restoreSession = async () => {
+    try {
+      const storedUser = await getCurrentUser();
+      const storedToken = await getAuthToken();
+      if (storedUser && storedToken) {
+        setUser(storedUser);
+        setToken(storedToken);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la restauration de session : ", error);
+    } finally {
+      setSessionLoading(false);
+    }
+  };
+  restoreSession();
+}, []);
 
 // 3. Fonction de connexion
-const loginUser = (login, password) => {
-// ToDo : implémenter une connexion avec une logique simplifiée : vérifie
-// si login/mot de passe correspondent à des valeurs prédéfinies
-// Si le login vaut "Andre" et le mot de passe vaut "secret"
-// alors mettre à jour l’état avec le login de l’utilisateur connecté en utilisant setUser(login) puis renvoyer true
-// Si la connexion échoue, renvoyer false
- if (login === "Andre" && password === "secret") {
-      setUser(login);
-      return true;
-    }
-    return false;
-};
+async function loginUser(login, password) {
+  const data = await signIn(login, password);
+  setUser(data.visiteur);
+  setToken(data.token);
+  return data;
+}
 // 4. Fonction de déconnexion
-const logoutUser = () => {
-// ToDo : réinitialiser la valeur de l’état à null
- setUser(null);
+const logoutUser = async () => {
+  await signOut();
+  setUser(null);
+  setToken(null);
 };
 // 5. Valeurs exposées aux composants enfants et rendu des composants enfants avec {children}
 return (
-<AuthContext.Provider value={{ user, loginUser, logoutUser }}>
+<AuthContext.Provider value={{ user, token, sessionLoading, loginUser, logoutUser }}>
 {children}
 </AuthContext.Provider>
 );
@@ -40,3 +52,13 @@ return (
 export function useAuth() {
 return useContext(AuthContext);
 }
+
+export const getCurrentUser = async () => {
+  const raw = await AsyncStorage.getItem("user");
+  return raw ? JSON.parse(raw) : null;
+};
+
+export const getAuthToken = async () => {
+  const token = await AsyncStorage.getItem("token");
+  return token ? token : null;
+};

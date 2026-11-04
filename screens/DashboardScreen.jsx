@@ -3,10 +3,10 @@ import { View, Text, TextInput, Switch, FlatList, ActivityIndicator, StyleSheet 
 import Navbar from "../components/Navbar.";
 import FraisCard from "../components/FraisCard";
 import { useAuth } from "../context/AuthContext";
-import fraisData from "../data/frais.json";
+import { API_URL } from "../services/authService";
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [fraisList, setFraisList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,11 +14,20 @@ export default function DashboardScreen() {
   const [minMontant, setMinMontant] = useState("");
 
   useEffect(() => {
-    // Simulation d'un appel API avec un délai de 500 ms
-    setTimeout(() => {
-      setFraisList(fraisData);
-      setLoading(false);
-    }, 500);
+    const fetchFrais = async () => {
+      try {
+        const response = await fetch(`${API_URL}frais/liste/${user.id_visiteur}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setFraisList(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des frais :", error);
+        setLoading(false);
+      }
+    };
+    fetchFrais();
   }, []);
 
   const filteredFrais = fraisList
@@ -35,7 +44,7 @@ export default function DashboardScreen() {
     <View style={{ flex: 1 }}>
       <Navbar />
       <View style={styles.container}>
-        <Text>Tableau de bord de {user}</Text>
+        <Text>Tableau de bord de {user.prenom_visiteur}</Text>
 
         <TextInput
           placeholder="Rechercher par année-mois ou ID visiteur..."

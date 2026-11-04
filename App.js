@@ -1,5 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { ActivityIndicator } from "react-native";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import HomeScreen from "./screens/HomeScreen";
 import LoginScreen from "./screens/LoginScreen";
@@ -8,7 +9,11 @@ import DashboardScreen from "./screens/DashboardScreen";
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
-  const { user } = useAuth();
+  const { user, sessionLoading } = useAuth();
+
+  if (sessionLoading) {
+    return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+  }
 
   return (
     <Stack.Navigator>
