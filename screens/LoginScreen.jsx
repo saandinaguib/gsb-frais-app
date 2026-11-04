@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigation } from "@react-navigation/native";
 import { View, Text, TextInput, Pressable, Alert } from "react-native";
 import Navbar from "../components/Navbar.";
 import { loginStyles as styles } from "../styles/loginStyles";
@@ -13,18 +12,13 @@ export default function LoginScreen() {
   // 2. Récupérer loginUser depuis le contexte
   const { loginUser } = useAuth();
 
-  // 3. Hook pour la redirection après connexion
-  const navigation = useNavigation();
-
-  // 4. Fonction appelée au clic sur le bouton
+  // 3. Fonction appelée au clic sur le bouton
   const handleSubmit = () => {
-    if (loginUser(login, password)) {
-      navigation.navigate("Dashboard"); // Succès : redirige vers Dashboard
-    } else {
+    if (!loginUser(login, password)) {
       Alert.alert("Identifiants incorrects"); // Échec : affiche une erreur
     }
   };
-  // 5. Rend le formulaire
+  // 4. Rend le formulaire
   return (
     <>
       <Navbar />
