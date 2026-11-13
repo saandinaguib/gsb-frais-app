@@ -1,11 +1,10 @@
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { View, Text, TextInput, Switch, FlatList, ActivityIndicator, StyleSheet, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Navbar from "../components/Navbar.";
 import FraisCard from "../components/FraisCard";
 import { useAuth } from "../context/AuthContext";
-import { API_URL } from "../config";
+import { getFraisList, deleteFrais } from "../services/fraisService";
 
 export default function DashboardScreen({ navigation }) {
   const { user, token } = useAuth();
@@ -14,19 +13,18 @@ export default function DashboardScreen({ navigation }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterNonNull, setFilterNonNull] = useState(true);
   const [minMontant, setMinMontant] = useState("");
+  const [error, setError] = useState("");
 
   useFocusEffect(
     useCallback(() => {
       const fetchFrais = async () => {
         try {
-          const response = await fetch(`${API_URL}frais/liste/${user.id_visiteur}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          setFraisList(data);
-          setLoading(false);
-        } catch (error) {
-          console.error("Erreur lors de la récupération des frais :", error);
+          setFraisList(await getFraisList(user.id_visiteur, token));
+          setError("");
+        } catch (err) {
+          console.error("Erreur lors de la récupération des frais :", err);
+          setError(err.message);
+        } finally {
           setLoading(false);
         }
       };
@@ -39,6 +37,15 @@ export default function DashboardScreen({ navigation }) {
     navigation.navigate("FraisEdit", { id });
   }
 
+  async function removeFrais(id) {
+    try {
+      await deleteFrais(id, token);
+      setFraisList((prev) => prev.filter((f) => f.id_frais !== id));
+    } catch (error) {
+      Alert.alert("Erreur lors de la suppression :", error.message);
+    }
+  }
+
   const handleDelete = (id) => {
     Alert.alert(
       "Confirmation",
@@ -48,19 +55,7 @@ export default function DashboardScreen({ navigation }) {
         {
           text: "Supprimer",
           style: "destructive",
-          onPress: async () => {
-            try {
-              const token = await AsyncStorage.getItem("token");
-              await fetch(`${API_URL}frais/suppr`, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ id_frais: id }),
-              });
-              setFraisList(fraisList.filter((f) => f.id_frais !== id));
-            } catch (error) {
-              console.error("Erreur lors de la suppression:", error);
-            }
-          },
+          onPress: () => removeFrais(id),
         },
       ]
     );
@@ -105,6 +100,7 @@ export default function DashboardScreen({ navigation }) {
           style={styles.searchInput}
         />
 
+        {error ? <Text style={styles.error}>{error}</Text> : null}
         <FlatList
           data={filteredFrais}
           keyExtractor={(item) => item.id_frais.toString()}
@@ -132,6 +128,10 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 12,
+  },
+  error: {
+    color: "red",
     marginBottom: 12,
   },
 });
