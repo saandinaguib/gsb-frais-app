@@ -20,6 +20,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a0c17a89-d473-473a-a480-b68ab8f32eaa"
+      }
+    },
+    "owner": "naguib69200"
   }
 }
